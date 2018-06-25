@@ -1,0 +1,113 @@
+########################################
+# [1] data 
+########################################
+
+# (s.bias.0 = read.table('C:\\ ....\\sexbias.txt', h = T));   
+
+s.bias = s.bias.0;
+
+colnames(s.bias)[3:7] = c('S','M','E2','E3','E'); 
+
+###############################################
+# [2] add class = E + 3*S + 6*M: 1, 2, ..., 12; 
+############################################### 
+
+s.bias = transform(s.bias, 
+Salary = Salary/1E3, class = as.factor(E + 3*S + 6*M),
+S = as.factor(S), M = as.factor(M), 
+E = as.factor(E));
+
+names(s.bias)[1] = 'salx1000'; 
+
+cat('', sep = '\n'); str(s.bias); 
+
+s.bias = subset(s.bias, select = -c(E2,E3));
+
+cat('', sep = '\n'); s.bias; # working version of data  
+
+options(show.signif.stars = FALSE); 
+
+f0 = salx1000 ~ class + class:years - 1;
+
+model.0 = lm(f0,s.bias);
+
+X.0 = model.matrix(model.0)[,];
+
+library(Matrix);
+
+cat('', sep = '\n'); dim(X.0); cat('', sep = '\n'); 
+cat('', sep = '\n'); rankMatrix(X.0)[1]; cat('', sep = '\n');
+############################################
+# [3]      not full rank model: 
+# _ blame on the 3 classes (6,10,11)  = 1 __
+# (not enough data for full E*S*M analysis)
+############################################ 
+
+cat('', sep = '\n'); coef(model.0); cat('', sep = '\n');
+cat('', sep = '\n'); with(s.bias, table(class)); cat('', sep = '\n');
+
+########################################
+# [4] scatter plot by class
+######################################## 
+
+col.rainbow = rainbow(12);
+
+palette(col.rainbow); 
+
+windows(); with(s.bias, plot(years, salx1000, 
+col = class, pch = 19, main = 'sex bias',
+cex = 2.));
+
+with(s.bias, legend(18,18,
+1:12,pch = rep(19,12), col = 1:12,
+cex = .75, pt.cex = .75, text.font = 2));
+
+with(s.bias,text(years,salx1000, lab = class, 
+pos = 2, cex = .75, font = 2));
+ 
+##########################################################
+# [6] simplify the model, assuming (usual strategy):
+# ________________________________________________________
+# a) equal slopes for 12 classes (continuous part)
+# b) additivity (between and within) categories and slopes  
+# ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯ 
+#              (and analyze results) 
+########################################################## 
+
+#################
+# In other words:
+#################
+
+f = salx1000 ~ S + M + E + years
+
+model = lm(f,s.bias); 
+
+coef = with(summary(model), coefficients);  
+
+#######################
+# class = E + 3*S + 6*M
+# E = 1,2,3
+# S = 0,1
+# M = 0,1
+#######################
+ 
+cat('', sep = '\n'); format(round(coef, d = 4)); cat('', sep = '\n'); 
+cat('', sep = '\n'); coef(model.0); cat('', sep = '\n');
+
+#####################################
+# [7] design matrix in additive model
+##################################### 
+
+cat('', sep = '\n'); (X = model.matrix(model)[,]); cat('', sep = '\n');
+cat('', sep = '\n'); dim(X); cat('', sep = '\n'); 
+cat('', sep = '\n'); rankMatrix(X)[1]; cat('', sep = '\n');
+
+#######################################
+# [8] construction of X
+# base categories: S = 0; M = 0; E = 1;
+####################################### 
+
+cat('',sep = '\n'); cbind(X,with(s.bias,data.frame(S,M,E))); cat('',sep = '\n'); 
+
+windows(); plot(model,1, cex = 1.2, col = 'purple', pch = 19, 
+add.smooth = FALSE, sub.caption = ''); 

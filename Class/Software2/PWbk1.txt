@@ -1,0 +1,296 @@
+====================================================================
+[1]
+====================================================================
+
+lhs = colnames(data.1)[3]; rhs = colnames(data.1)[2]; 
+
+(f = as.formula(paste(lhs,rhs, sep = '~ ')));
+
+(coef = format(round(with(summary(model.1), coefficients), d = 4)));
+
+str(coef);
+
+(string = paste(colnames(data.1)[3], ' = ', coef[1,1], 
+' + ', paste(coef[2,1],'*', colnames(data.1)[2], sep = '')));
+
+windows(); 
+
+with(data.1,
+plot(PovPct,Brth15to17, 
+pch = 16,   
+main = string,
+col = 'royalblue2', 
+cex = 1.5));  
+
+abline(model.1, lty = '1373', lwd = 3, col = 'firebrick1');
+
+box(lwd = 2);
+
+(int = round(confint(model.1, colnames(data.1)[2], level = .95), d = 4)); 
+
+(newdata = data.frame(15));
+
+colnames(newdata) = colnames(data.1)[2];
+
+(pred = predict(model.1,newdata));
+
+library(car);
+
+windows(); 
+
+residualPlots(model.1, 
+type = 'rstudent',
+tests = FALSE, 
+quadratic = FALSE,
+ask = FALSE, 
+col = 'navy',
+pch = 19,
+cex = 1.5, 
+main = 'Residual plots model.1'); 
+
+====================================================================
+[2]
+====================================================================
+
+(f = log(Tax) ~ log(Price));
+
+windows(); 
+
+with(data.2,
+plot(Price,Tax, 
+pch = 16,   
+main = 'Tax and Price',
+col = 'salmon2', 
+cex = 1.5));  
+
+box(lwd = 2);
+
+windows(); 
+
+with(data.2,
+plot(log(Price),log(Tax), 
+pch = 16,   
+main = 'log(Tax) and log(Price)',
+col = 'firebrick2', 
+cex = 1.5));  
+
+box(lwd = 2);
+
+dev.set(3);
+
+(coef = format(round(with(summary(model.2), coefficients), d = 4)));
+
+(string = paste('log(Tax)',' = ', coef[1,1], 
+' + ', paste(coef[2,1],'*log(Price)', sep = '')));
+
+with(data.2,
+plot(log(Price),log(Tax), 
+pch = 16,   
+main = string,
+col = 'firebrick2', 
+cex.main = 1.1, 
+col.main = 'royalblue2',
+cex = 1.5));  
+
+abline(model.2, lty = '1373', lwd = 3, col = 'navy'); 
+
+dev.set(2);
+
+a = as.numeric(coef[1,1]); a = round(exp(a), d = 4); 
+
+b = '0.9830';
+
+(string = paste('Tax',' = ', paste(a,'*Price^(',b,')',sep = ''))); 
+
+with(data.2,
+plot(Price,Tax, 
+pch = 16,   
+main = string,
+cex.main = 1.1,
+col = 'salmon2', 
+col.main = 'mediumseagreen',
+cex = 1.5,
+cex.main = 1.1));  
+
+with(data.2,lines(sort(Price),7.9757*sort(Price)^(0.9830), lty = '1373', lwd = 3, col = 'darkcyan'));
+
+lht(model.2,'log(Price) = 1'); 
+
+(t = (as.numeric(coef[2,1]) - 1)/as.numeric(coef[2,2]));
+
+2*pt(t,102);
+
+str(data.2);
+ 
+newdata = data.frame(100); 
+
+colnames(newdata) = colnames(data.2)[2];  
+
+exp(predict(model.2,newdata));
+
+windows(); 
+
+residualPlots(model.2, 
+type = 'rstudent',
+tests = FALSE, 
+quadratic = FALSE,
+ask = FALSE, 
+col = 'navy',
+pch = 19,
+cex = 1.5, 
+main = 'Residual plots model.2 (after transforming)'); 
+       
+model = lm(Tax ~ Price, data.2);
+
+windows(); 
+
+residualPlots(model, 
+type = 'rstudent',
+tests = FALSE, 
+quadratic = FALSE,
+ask = FALSE, 
+col = 'orangered',
+pch = 19,
+cex = 1.5, 
+main = 'Residual plots model.2 (before transforming)'); 
+ 
+====================================================================
+[3]
+====================================================================
+
+##########################
+# initial exploratory plot
+##########################
+
+windows();  
+
+with(data.3,
+plot(Pages, 
+Revenue,
+pch = 16,   
+main = 'Revenue and Pages',
+col = 'salmon2', 
+cex = 1.5));  
+
+box(lwd = 2);
+
+#################################
+# take logs in (response) Revenue 
+#################################
+
+windows();  
+
+with(data.3,
+plot(Pages, 
+log(Revenue),
+pch = 16,   
+main = 'log(Revenue) and Pages',
+col = 'purple', 
+cex = 1.5));  
+
+box(lwd = 2);
+
+################################
+# take logs in (regressor) Pages 
+# and identify outliers
+################################
+
+windows();  
+
+with(data.3,
+plot(log(Pages),
+log(Revenue), 
+pch = 16,   
+main = 'log(Revenue) and log(Pages)',
+col = 'firebrick2', 
+cex = 1.5));  
+
+box(lwd = 2);
+
+with(data.3,range(Pages));
+
+with(data.3,range(log(Pages)));
+
+# outliers
+ 
+(out = subset(data.3, log(Pages) == 0 | log(Pages) > 4)); 
+
+# AltGr + 1 for '|';  
+
+(z = as.numeric(rownames(out))); 
+
+(data.3n = data.3[-z,]);
+
+windows(); 
+
+with(data.3n,
+plot(log(Pages),
+log(Revenue), 
+pch = 16,   
+main = 'log(Revenue) and log(Pages) [-outliers]',
+col = 'royalblue3', 
+cex = 1.5,
+col.main = 'mediumseagreen'));   
+
+box(lwd = 2);
+
+f = log(Revenue) ~ log(Pages); 
+
+model.3 = lm(f,data.3n); 
+
+(coef = format(round(with(summary(model.3), coefficients), d = 4)));
+
+########################################
+# [4] Process for finding transformation
+# is similar to this (with no outliers)
+########################################
+
+data.4 = read.xlsx('C:\\ ...\\bodyweight.xlsx'); 
+
+##########################
+# initial exploratory plot
+##########################
+
+windows();  
+
+with(data.4,
+plot(Body.weight, 
+Brain.weight, 
+pch = 16,   
+main = 'Brain.weight and Body.weight',
+col = 'salmon2', 
+cex = 1.5));  
+
+box(lwd = 2);
+
+######################################
+# take logs in (response) Brain.weight 
+######################################
+
+windows();  
+
+with(data.4,
+plot(Body.weight, 
+log(Brain.weight),
+pch = 16,   
+main = 'log(Brain.weight) and Body.weight',
+col = 'purple', 
+cex = 1.5));  
+
+box(lwd = 2);
+
+######################################
+# take logs in (regressor) Body.weight 
+######################################
+
+windows();  
+
+with(data.4,
+plot(log(Body.weight),
+log(Brain.weight), 
+pch = 16,   
+main = 'log(Brain.weight) and log(Body.weight)',
+col = 'firebrick2', 
+cex = 1.5));  
+
+box(lwd = 2);

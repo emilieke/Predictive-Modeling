@@ -1,0 +1,269 @@
+#######################
+# Load data;
+#######################
+
+state.x77;
+
+class(state.x77);
+
+str(state.x77);
+
+##################################
+# Form a data frame with the data;
+##################################
+
+st = data.frame(state.x77); 
+
+str(st); 
+
+plot(st, pch = 16,   
+main = 'Scatter plot matrix');  
+
+############################
+# Remove significance stars;
+############################
+
+options(show.signif.stars = F); 
+
+#############################################################
+# Fit of full model.  For writing '~', do 'AltGr + 4 + Space'; 
+#############################################################
+
+full = lm(Life.Exp ~ Population + Income + Illiteracy + 
+Murder + HS.Grad + Frost + Area, data = st);
+
+###############################################################
+# For reducing notation when the number of regressors is large;
+###############################################################
+
+f = Life.Exp ~ Population + Income + Illiteracy + Murder + 
+HS.Grad + Frost + Area;
+
+full = lm(f,st); 
+
+f = Life.Exp ~ .;
+
+full = lm(f,st); 
+
+formula(full);
+
+summary(full);
+
+#######################
+# Fit of reduced model;
+#######################
+
+f = Life.Exp ~ Population + Murder + HS.Grad + Frost;
+
+reduced = lm(f, st);
+
+summary(reduced);
+
+#################
+# Compare models;
+#################
+
+anova(reduced, full);  
+
+############################
+# updating full and reduced;
+############################
+
+full. = update(full, .~. -Population + log(Population)
+
+-Area + log(Area)); 
+
+reduced. = update(reduced, .~. -Population + log(Population));
+
+anova(reduced.,full.);
+
+full = full.;
+
+reduced = reduced.;
+
+############################
+# Further operations with R:
+############################
+
+#######################
+# Standard ANOVA table;
+#######################
+
+f = Life.Exp ~ 1.;
+
+one.sample = lm(f,st);
+
+anova(one.sample,full.);
+
+#################
+# Vector of ones;
+#################
+
+n = dim(st)[1];
+
+ones.n = matrix(1,n,1); 
+
+###############
+# Model matrix;
+###############
+
+str(full);
+
+full$model;
+
+############################################
+# Remove intercept from regression equation;
+############################################
+
+update(reduced, .~. -1); 
+
+#################################################
+# Confidence intervals for individual parameters;
+#################################################
+
+confint(full, 'Murder', level = 0.90);
+
+#####################################################################
+# Confidence and prediction intervals for specified regressor values;
+#####################################################################
+
+predict(reduced, data.frame(Murder = 12, HS.Grad = 55, 
+Frost = 60, Population = 5000), se.fit = TRUE, 
+interval = 'confidence', level = 0.95);
+
+predict(reduced, data.frame(Murder = 12, HS.Grad = 55, 
+Frost = 60,Population = 5000), se.fit = TRUE, 
+interval = 'prediction', level = 0.95);
+
+############################################
+# Coefficients, fitted values and residuals;
+############################################
+
+betas = coef(full);
+
+fit = fitted(full); 
+
+res = residuals(full); 
+
+stres = rstandard(full); 
+
+studres = rstudent(full);
+
+plot(full,1, label.id = NULL,
+sub.caption = '', 
+caption = 'residual plot in full model');
+
+library(car);
+
+residualPlots(full, type = 'rstudent',
+tests = F, fitted = F); 
+
+residualPlot(full, type = 'rstudent',
+tests = F, terms = ~ 1, main = 'linear fit');
+
+#############################################
+# For including powers and transformations of 
+# of predictors;
+#############################################
+
+q.fit = lm(y ~ x + I(x^2));
+
+##########################
+# and NOT lm(y ~ x + x*x);
+########################## 
+
+######################
+# Indicator variables;
+######################
+
+attach(st); 
+
+ind = as.numeric(Frost >= 60);
+
+head(data.frame(Frost,ind), n = 10);
+
+detach(st); 
+
+st = cbind(st,ind);  
+
+rm(ind); 
+
+##################################
+# Separate regression for ind = 1;
+##################################
+
+full.1 = lm(formula(full), subset = ind == 1,
+st);
+ 
+######################### 
+# Weighted Least Squares;
+#########################
+
+library('openxlsx'); 
+
+labour = read.xlsx('labour_2.xlsx');
+
+n = dim(labour)[1]; 
+
+ones.n = matrix(1,n,1);
+
+f = log(labour) ~ log(wage) + log(output) +
+log(capital);
+
+wls0 = lm(f, weights = ones.n, data = labour);
+
+wls = lm(f, weights = (1/cstd)*(1/cstd), data = labour);
+
+###################
+# Ridge regression;
+###################
+
+library('MASS'); 
+
+library('openxlsx');
+
+imp = read.xlsx('import.xlsx'); 
+
+names(imp)[2] = 'imp.1';
+
+n = dim(imp)[1]; 
+
+attach(imp);
+
+##########################
+# Scale all the variables;
+##########################
+
+simp = scale(imp.1); 
+
+sdprod = scale(dprod);
+
+sstock = scale(stock); 
+
+sconsum = scale(consum);
+
+###################
+# Tuning constants;
+###################
+
+a = .05;
+
+#####################
+# lm.ridge in 'MASS';
+#####################
+
+f = simp ~ 0 + sdprod + sstock + sconsum;
+
+rdg = lm.ridge(f, lambda = seq(0,n,a*n), data = imp);
+
+round(coef(rdg), d = 4);
+round(t(rdg$coef/rdg$scale), d = 4);
+round(sqrt(n/(n-1))*t(rdg$coef), d = 4);
+
+##############
+# Ridge trace;
+##############
+
+matplot(rdg$lambda,t(rdg$coef), type = 'l', 
+xlab = expression(lambda), 
+ylab = expression(hat(beta)));

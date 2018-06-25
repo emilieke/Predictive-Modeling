@@ -1,0 +1,102 @@
+##################################
+# After changing working directory
+##################################
+
+###########
+# Read data
+###########
+
+library('openxlsx');
+
+prf = read.xlsx('profit.xlsx');
+
+prf.1 = prf[, 1:5];
+
+################################## 
+# All regressors, no Special.offer
+################################## 
+
+f = Profit ~ .;
+
+full = lm(f, data = prf.1);
+
+coef = round(with(summary(full), coefficients), d = 4); 
+
+format(coef);
+
+####################################### 
+# Sales and Purchases, no Special.offer
+####################################### 
+
+f = Profit ~ Sales + Purchases;
+
+reduced = lm(f, data = prf);
+
+aov.red = anova(reduced,full); str(aov.red); 
+
+RSS.red = with(aov.red,RSS[1]); round(RSS.red, d = 4);
+
+###################################### 
+# Sales and Purchases, different slope 
+# and intercept parameters
+###################################### 
+
+f = Profit ~ Special.offer + Sales + Purchases + Special.offer:(Sales + Purchases); 
+
+############################################################
+# or simply f =  Profit ~  Special.offer*(Sales + Purchases)
+############################################################
+
+full.01 = lm(f, data = prf);
+
+aov.01 = anova(full.01); str(aov.01); RSS = aov.01$'Sum Sq'[6]; 
+
+f = Profit ~ Sales + Purchases;
+
+full.0 = lm(f, subset = Special.offer == 0, data = prf);
+
+aov.0 = anova(full.0); str(aov.0); RSS0 = aov.0$'Sum Sq'[3];
+
+full.1 = lm(f, subset = Special.offer == 1, data = prf);
+
+aov.1 = anova(full.1); str(aov.1); RSS1 = aov.1$'Sum Sq'[3];
+
+########################################
+# Sales and Purchases, same slope but 
+# different intercept parameters (dummy)
+########################################
+
+f = Profit ~ Special.offer + Sales + Purchases;
+
+full.d = lm(f, data = prf); 
+
+aov.d = anova(full.d); str(aov.d); RSS.d = aov.d$'Sum Sq'[3];
+
+###################################
+# Different residual sum of squares
+###################################
+
+round(cbind(RSS.red, RSS, RSS0, RSS1, RSS0 + RSS1, RSS.d), d = 4);
+
+###########################
+# H0: Same slope parameters
+###########################
+
+anova(full.d, full.01);
+
+###############################
+# H0: Same intercept parameters
+# H0: Dummy = 0
+###############################
+
+anova(reduced, full.d)
+
+#########################################
+# Relation between F and t in dummy model
+#########################################
+
+round(summary(full.d)$coeff, d = 4);
+
+t = as.matrix(data.frame(summary(full.d)$coeff)[,3])[2];
+
+round(cbind(t*t, anova(reduced, full.d)$F[2]), d = 4);

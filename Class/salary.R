@@ -1,0 +1,330 @@
+# Set working directory
+setwd("/Users/Emilie/Dropbox/Skole/UC3M/Predictive modeling/class")
+
+##########
+# [1] data 
+##########
+
+(sal.0 = read.table('salary.txt', h = T));  
+
+##########################
+# remove outlier at row 33
+##########################  
+
+sal = sal.0[-33, ];  
+
+rownames(sal) = c(1:45);
+
+cat('', sep = '\n'); str(sal);   
+
+cat('', sep = '\n'); (n = nrow(sal)); 
+
+#########################################
+# [2] change column names;
+#     add class = E + 3*M: 1, 2, ..., 6; 
+#     use transform(sal,*)
+######################################### 
+
+sal = transform(sal, 
+                S = S/1E3, E = as.factor(E), 
+                M = as.factor(M), class = as.factor(E + 3*M));
+
+names(sal)[1:4] = c('salx1000',
+                    'years', 
+                    'educ',
+                    'man'); 
+
+cat('', sep = '\n'); str(sal); 
+
+cat('', sep = '\n'); head(sal, n = 10);   
+
+###############################
+# [3] initial scatter plot (!?)
+############################### 
+
+xrange = with(sal, range(years));
+
+yrange = with(sal,range(salx1000));
+
+attach(sal)
+
+windows();
+
+plot(c(min(years)-1,max(years)), 
+     c(min(salx1000), max(salx1000)+3), 
+     type = 'n', 
+     xlab = 'years', 
+     ylab = 'salx1000',
+     main = 'correspondence of points to classes (!?)'); 
+
+points(years,salx1000); 
+
+###########################
+# [4] scatter plot by class
+###########################
+
+nclass = max(as.integer(class)); 
+
+colors = rainbow(nclass);
+
+linetype = c(1:nclass);
+
+plotchar = c(15:20);  
+
+####################
+# [5] set up display
+####################
+
+windows();
+
+par(lwd = 2., 
+    font.lab = 2, cex.lab = 1.1,
+    font.main = 2, cex.main = 1.4, 
+    col.main = 'deepskyblue');
+
+plot(c(min(years)-1,max(years)), 
+     c(min(salx1000), max(salx1000)+3), 
+     type = 'n', 
+     xlab = 'years', 
+     ylab = 'salx1000', 
+     main = 'Salary example');  
+
+###################################
+# [6] add lines with color by class
+###################################
+
+for (i in 1:nclass)
+  
+{
+  par(cex = 1.5, 
+      col = colors[i], 
+      lty = linetype[i],
+      pch = plotchar[i], 
+      lwd = 3.5);
+  
+  sal. = subset(sal, class == as.character(i)); 
+  
+  with(sal.,
+       lines(years, salx1000, type = 'b'));
+  
+  rm(sal.); 
+}
+
+##################
+# [7] add a legend
+################## 
+
+par(col = 'black',  
+    bg = 'ghostwhite', 
+    lty = 1,
+    lwd = 1); 
+
+legend(min(years)-1., max(salx1000)+3.,
+       h = T,
+       xjust = 0,
+       cex = 0.6,
+       pt.cex = 0.9,
+       1:nclass,  
+       col = colors, 
+       pch = plotchar, 
+       lty = linetype, 
+       lwd = rep(2.,6),
+       title = 'class',
+       text.font = 2);  
+
+detach(sal) 
+
+options(show.signif.stars = FALSE); 
+
+###################################
+# [8] ls in full 12-parameter model
+################################### 
+
+f.exp = salx1000 ~ class + class:years - 1; 
+
+model.exp = lm(f.exp,sal); 
+
+coef.exp = with(summary(model.exp), coefficients);
+
+cat('', sep = '\n'); format(round(coef.exp, d = 4)); cat('', sep = '\n');
+
+#####################################
+# [9] ls in reduced 7-parameter model
+#####################################
+
+f.red = salx1000 ~ class + years - 1; 
+
+model.red = lm(f.red, sal);  
+
+coef.red = with(summary(model.red), coefficients);
+
+cat('', sep = '\n'); format(round(coef.red, d = 4));  
+
+###########################
+# [10] comparison of models
+###########################
+
+cat('', sep = '\n'); (hip = anova(model.red,model.exp)); 
+
+cat('', sep = '\n'); str(hip);  
+
+cat('', sep = '\n'); round(with(hip,RSS), d = 4);  
+
+###########################
+# [11] comparison of models
+###########################
+
+f.0 = salx1000 ~ years;
+
+model.0 = lm(f.0,sal); 
+
+coef.0 = with(summary(model.0), coefficients);
+
+cat('', sep = '\n'); format(round(coef.0, d = 4));  
+
+cat('', sep = '\n'); (hip = anova(model.0,model.red)); 
+
+cat('', sep = '\n');  round(with(hip,RSS), d = 4); 
+
+#####################
+# [12] residual plots
+#####################
+
+library(car);
+
+windows(); 
+
+par(mfrow = c(2,2),
+    oma = c(2,2,3,2)); 
+
+residualPlots(model.exp, 
+              type = 'rstudent', 
+              tests = FALSE, 
+              quadratic = FALSE,
+              terms = ~ 1, 
+              ask = FALSE, 
+              col = 'navy',
+              pch = 19,
+              cex = 1.5,
+              font.lab = 2); 
+
+title('12 parameter model.exp', font.main = 2, cex.main = 1.2, 
+      col.main = 'royalblue3');
+
+residualPlots(model.red, 
+              type = 'rstudent', 
+              tests = FALSE, 
+              quadratic = FALSE,
+              terms = ~ 1, 
+              ask = FALSE, 
+              col = 'firebrick1',
+              pch = 19,
+              cex = 1.5,
+              font.lab = 2); 
+
+title('7 parameter model.red', font.main = 2, cex.main = 1.2, 
+      col.main = 'royalblue3');
+
+residualPlots(model.0, 
+              type = 'rstudent', 
+              tests = FALSE, 
+              quadratic = FALSE,
+              terms = ~ 1, 
+              ask = FALSE, 
+              col = 'mediumseagreen',
+              pch = 19,
+              cex = 1.5,
+              font.lab = 2); 
+
+title('salx1000 ~ years', font.main = 2, cex.main = 1.2, 
+      col.main = 'royalblue3');
+
+####################################
+# [13] comparison of design matrices
+####################################
+
+library(Matrix)
+
+cat('', sep = '\n'); (X.exp = model.matrix(model.exp)[,]); cat('', sep = '\n');
+cat('', sep = '\n'); rankMatrix(X.exp)[1]; cat('', sep = '\n');
+cat('', sep = '\n'); (X.red = model.matrix(model.red)[,]); cat('', sep = '\n');
+cat('', sep = '\n'); rankMatrix(X.red)[1]; cat('', sep = '\n');
+cat('', sep = '\n'); (X = model.matrix(model.0)[,]); cat('', sep = '\n');
+cat('', sep = '\n'); rankMatrix(X)[1]; cat('', sep = '\n');
+
+################################
+# [14] decategorize in model.red
+################################
+
+res.salx1000 = residuals(lm(salx1000 ~ class, sal));
+
+res.years = residuals(lm(years ~ class, sal));
+
+windows(); 
+plot(res.years, res.salx1000, col = 'navy', 
+                pch = 19, cex = 1.5, main = 'salx1000 ~ years (decategorized)'); 
+
+#######################################
+# regression below is with no intercept
+#######################################
+
+cat('', sep = '\n'); coef(lm(res.salx1000 ~ res.years - 1));  
+
+###################################
+# same value as the one obtained in
+###################################
+
+cat('', sep = '\n'); coef(model.red)[7]
+
+#####################################
+# linear increase of roughly 500 $ 
+# every additional year of experience
+#####################################
+
+#################################
+# [15] alternative mean functions 
+#################################
+
+cat('', sep = '\n'); format(round(coef.exp, d = 4)); cat('', sep = '\n');
+
+##############################################
+# with base categories both in class and years
+#  (best choice for testing same slopes)
+##############################################
+
+f = salx1000 ~ class*years 
+
+cat('', sep = '\n'); summary(lm(f,sal));
+
+##############################################
+#          exactly as before with 
+#
+# f.exp =  salx1000 ~ class + class:years - 1
+##############################################
+
+f = salx1000 ~ class*years - 1 - years;  
+
+cat('', sep = '\n'); summary(lm(f,sal));
+
+##############################################
+#          exactly as before with 
+#
+#  f.exp =  salx1000 ~ class + class:years - 1
+#
+# and no need of variable class = educ + 3*man
+##############################################
+
+f = salx1000 ~ educ:man + educ:man:years - 1 - years; 
+
+cat('', sep = '\n'); summary(lm(f,sal)); 
+
+##############################################
+#         Typically in practice (!?):
+#
+#    additive + same slopes specification
+############################################## 
+
+f.ad =  salx1000 ~ educ + man + years 
+
+cat('', sep = '\n'); summary(lm(f.ad,sal)); 
+

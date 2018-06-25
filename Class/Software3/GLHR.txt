@@ -1,0 +1,152 @@
+######
+# data
+######
+
+cat('', sep = '\n'); (at = attitude); cat('', sep = '\n'); (z = colnames(at));
+
+#####################
+# model.1: full model
+#####################
+
+lhs = z[1]; rhs.1 = paste(z[-1], collapse = ' + ');  
+
+cat('', sep = '\n'); (string.1 = paste(lhs,rhs.1, sep = ' ~ ')); 
+
+f.1 = as.formula(string.1); model.1 = lm(f.1, at); 
+
+coef.1 = round(with(summary(model.1), coefficients), d = 4); 
+
+cat('', sep = '\n'); (coef.1 = format(coef.1));  
+
+##########################################################
+# model.2: reduced model with only complaints and learning
+##########################################################
+
+rhs.2 = paste(z[c(2,4)], collapse = ' + ');
+
+cat('', sep = '\n'); (string.2 = paste(lhs,rhs.2, sep = ' ~ '));
+
+f.2 = as.formula(string.2); model.2 = lm(f.2, at); 
+
+coef.2 = round(with(summary(model.2), coefficients), d = 4); 
+
+cat('', sep = '\n'); (coef.2 = format(coef.2));
+
+###############
+# anova and glh
+############### 
+
+library(car);
+
+options(show.signif.stars = FALSE);
+
+cat('', sep = '\n'); anova(model.2,model.1);
+
+glh.1 = paste(z[c(3,5:7)], ' = 0'); cat('',glh.1, sep = '\n');
+
+cat('', sep = '\n'); lht(model.1,glh.1); 
+
+###################################################################
+# model.3: subjetive_(complaints) = objective_(learning) in model.2
+###################################################################
+
+rhs.3 = paste('I(',rhs.2,')', sep = '');
+
+cat('', sep = '\n'); (string.3 = paste(lhs,rhs.3, sep = ' ~ '));
+
+f.3 = as.formula(string.3); model.3 = lm(f.3, at); 
+
+coef.3 = round(with(summary(model.3), coefficients), d = 4); 
+
+cat('', sep = '\n'); (coef.3 = format(coef.3));
+
+###############
+# anova and glh
+############### 
+
+cat('', sep = '\n'); anova(model.3,model.2);
+
+glh.2 = paste(paste(z[c(2,4)], collapse = ' - '), ' = 0', sep = ''); cat('',glh.2, sep = '\n');
+
+cat('', sep = '\n'); lht(model.2,glh.2); 
+
+#########################################
+# one-step simplification (less powerful)
+#########################################
+
+cat('', sep = '\n'); anova(model.3,model.1);
+
+glh.3 = c(glh.1,glh.2); cat('',glh.3, sep = '\n');
+
+cat('', sep = '\n'); lht(model.1,glh.3); 
+
+#################
+# once in model.3
+#################
+
+cat('', sep = '\n'); (coef.3 = format(coef.3));
+
+cat('', sep = '\n'); rhs.3;
+
+GLH.3 = paste(rhs.3, ' = ',0.5, sep = ''); cat('',GLH.3, sep = '\n');
+
+cat('', sep = '\n'); lht(model.3,GLH.3);  
+
+coef.3b = with(summary(model.3), coefficients);
+
+t = (coef.3b[2,1] - .5)/coef.3b[2,2]; cat('', sep = '\n'); round(t, d = 4); 
+
+cat('', sep = '\n'); round(2*pt(t,28), d = 4);
+
+cat('', sep = '\n'); round(t*t, d = 4); 
+
+######################################
+# rating ~ = (complaints + learning)/2
+######################################
+
+explanation = with(at, (complaints + learning)/2); 
+
+cat('', sep = '\n'); data.frame(rating = at[,1],explanation, at[,c(2,4)]);
+
+diff = with(at,rating) - explanation;
+
+windows(); hist(diff, col = 'grey90');   
+
+cat('', sep = '\n'); summary(diff);
+
+################ 
+# residual plots
+################
+
+windows(); 
+
+residualPlots(model.3, 
+quadratic = FALSE,
+tests = FALSE,
+pch = 19,
+col = 'navy',
+cex = 1.3,
+grid = FALSE,
+type = 'rstudent'); 
+
+######################################
+# alternative method for deciding that
+#        complaints = learning
+######################################
+
+library(multcomp);
+
+##################################
+# 95% CI for complaints - learning
+##################################
+
+lin = 'complaints - learning = 0'
+
+model.11 = glht(model.1, lin);
+
+data.frame(with(confint(model.11), round(confint, d = 4)));
+
+model.22 = glht(model.2, lin);
+
+data.frame(with(confint(model.22), round(confint, d = 4)));
+ 

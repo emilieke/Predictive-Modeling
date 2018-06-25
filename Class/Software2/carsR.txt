@@ -1,0 +1,56 @@
+########################################
+# [1] data 
+########################################
+ 
+cars; 
+
+class(cars); 
+
+str(cars); 
+
+attributes(cars); 
+
+help(cars); 
+
+########################################
+# [2] scatter plot 
+########################################
+
+windows(); 
+
+with(cars, plot(speed,dist, cex = 1.2, 
+col = 'purple', pch = 19)); 
+
+########################################
+# [3] take log(dist) and sqrt(dist)
+########################################
+
+windows(); 
+
+with(cars, plot(speed,log(dist), cex = 1.2, 
+col = 'blue', pch = 19)); 
+
+windows(); 
+
+with(cars, plot(speed,sqrt(dist), cex = 1.2, 
+col = 'mediumseagreen', pch = 19)); 
+
+################################################
+# [4] backtransforming + fitted regression lines 
+################################################
+
+dev.set(2);
+
+a = coef(lm(log(dist) ~ speed, data = cars)); 
+
+with(cars, lines(speed, exp(a[1] + a[2]*speed), 
+lty = '1373', col = 'black', lwd = 1.75)); 
+ 
+b = coef(lm(sqrt(dist) ~ speed, data = cars)); 
+
+with(cars, lines(speed, (b[1] + b[2]*speed)^2, 
+lty = '1373', col = 'firebrick1', lwd = 1.75)); 
+
+#############################################
+# which one is better? ...
+#############################################

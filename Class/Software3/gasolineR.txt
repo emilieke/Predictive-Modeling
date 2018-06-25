@@ -1,0 +1,338 @@
+#######################
+# read data 
+#######################
+
+# cat('', sep = '\n'); (gas = read.table('C:\\ ... \\gasoline.txt', h = T));
+
+######################################################################
+#    YEAR    = Year, 1953-2004
+#    GASEXP  = Total U.S. gasoline expenditure in billions of dollars
+#    POP     = U.S. total population in thousands 
+#    GASP    = Price index for gasoline
+#    INCOME  = Per capita disposable income
+#    PNC     = Price index for new cars
+#    PUC     = Price index for used cars
+#    PPT     = Price index for public transportation
+#    PD      = Aggregate price index for consumer durables
+#    PN      = Aggregate price index for consumer nondurables
+#    PS      = Aggregate price index for consumer services.
+######################################################################
+
+graphics.off();
+
+rm(list=(ls()[ls() != 'gas']));
+
+library(car); 
+
+attach(gas);  
+
+###################################
+# G stands for per capita gasoline
+# consumption. To check that, do:
+##################################
+
+cat('', sep = '\n'); (G.1 = GASEXP/(GASP*(POP/1.E5))); 
+
+##############################
+# and change units by forming:
+##############################
+
+G.10 = 10*G;
+
+##################################
+# unusual demand curve 
+##################################
+
+windows(); 
+
+plot(G.10, GASP, col = 'blue', pch = 19, 
+cex = 1.2, main = '(unusual) demand curve'); 
+
+###################################
+# LS of G.10 ~ GASP
+##################################
+
+options(show.signif.stars = FALSE)
+
+cat('', sep = '\n'); (f.0 = G.10 ~ GASP);
+
+model.0 = lm(f.0, data = gas); 
+
+coef.0 = with(summary(model.0), coefficients);
+
+cat('', sep = '\n'); format(round(coef.0, d = 4));  
+ 
+##################################
+# ... !?  
+##################################
+
+library(zoo)
+
+gas.zoo = as.zoo(gas); index(gas.zoo) = with(gas,YEAR);
+
+windows(); plot(gas.zoo[,c(2:12)], lty = '21',
+lwd = 2., col = 'firebrick1',
+main = 'gasoline data', xlab = 'time',
+cex.main = 1.75); 
+
+windows(); plot(gas.zoo[,c(12,4:5)], lty = '21',
+lwd = 2., col = 'royalblue2',
+main = 'G = F(GASP, INCOME)', xlab = 'time',
+cex.main = 1.75);
+ 
+##################################
+# include INCOME 
+##################################
+
+cat('', sep = '\n'); (f.1 = update(f.0, ~ . + INCOME)); 
+
+model.1 = lm(f.1, data = gas);  
+
+coef.1 = with(summary(model.1), coefficients);
+
+cat('', sep = '\n'); format(round(coef.1, d = 4)); 
+
+##################################
+# However ...
+##################################
+
+windows();
+
+residualPlots(model.1, 
+type = 'rstudent', 
+tests = FALSE, 
+quadratic = FALSE,
+fitted = FALSE,  
+ask = FALSE, 
+col = 'purple',
+main = 'However ...',  
+pch = 19,
+cex = 1.5); 
+
+#####################################
+# update model including I(INCOME^2): 
+# (quadratic) acceleration term
+#####################################
+
+model.q = update(model.1, ~ . + I(INCOME^2)); 
+
+cat('',sep = '\n'); formula(model.q);
+
+coef.q = with(summary(model.q), coefficients);
+
+cat('', sep = '\n'); format(round(coef.q, d = 8)); 
+
+windows(); 
+
+residualPlots(model.q, 
+type = 'rstudent', 
+tests = FALSE, 
+quadratic = FALSE,
+fitted = FALSE,  
+ask = FALSE, 
+col = 'purple',
+main = 'Better (but not perfect)',
+pch = 19,
+cex = 1.5); 
+
+windows(); 
+
+plot(model.q, 1,
+col = 'seagreen',
+pch = 19,
+cex = 1.5,  
+add.smooth = FALSE); 
+
+detach(gas)  
+
+######################################
+#   
+# include lagged variables?  
+#_____________________________________
+#     
+#     (G,GASP,INCOME)[YEAR] 
+#          depends on 
+#    (G,GASP,INCOME)[YEAR - 1]
+#
+#   (as implied by residual plots?)
+#
+#_____________________________________            
+#
+# and a time trend?
+#
+#     G = f(GASP,INCOME,YEAR) 
+#  
+######################################
+
+attach(gas);
+
+###############
+# model in logs
+###############
+
+lhs = 'log(G.10)';
+
+cat('', sep = '\n'); (z = paste('log(',colnames(gas),')', sep = ''));
+ 
+rhs = paste(z[4:8], collapse = ' + ');
+
+cat('', sep = '\n'); (f = as.formula(paste(lhs, rhs , sep = ' ~ ')));
+
+model = lm(f,gas); 
+
+coef = round(with(summary(model), coefficients), d = 4); 
+
+cat('', sep = '\n'); (coef = format(coef));
+
+glh.1 = paste(z[6:8], ' = 0', sep = ''); 
+
+cat('', sep = '\n'); lht(model,glh.1); 
+
+model.red = update(model, ~ . -log(PNC) - log(PUC) - log(PPT), gas)
+
+coef.red = round(with(summary(model.red), coefficients), d = 4); 
+
+cat('', sep = '\n'); (coef.red = format(coef.red)); 
+
+#####################################################
+# role of log(GASP),log(PNC), log(PUC), log(PPT) (¡?)
+#####################################################
+
+####################
+# reorder regressors
+####################
+
+cat('', sep = '\n'); (u = paste(c(z[5],z[c(4,6:8)])));  
+
+rhs = paste(u, collapse = ' + ');
+
+####################
+# marginal inference
+####################
+
+cat('', sep = '\n'); (f = as.formula(paste(lhs, rhs , sep = ' ~ ')));
+
+model = lm(f,gas); 
+
+coef = round(with(summary(model), coefficients), d = 4); 
+
+cat('', sep = '\n'); (coef = format(coef));
+
+##################
+# only log(INCOME)
+##################
+
+glh = c('log(GASP) = 0',glh.1); lht(model,glh); 
+
+################
+# sequential SSs 
+################
+ 
+aov = anova(model); 
+
+##########################################
+# needs some decoration as performed below
+##########################################
+
+s = colnames(aov); 
+w = rownames(aov); 
+a = .123456789;
+
+aov = with(aov,data.frame(Df, round(aov$'Sum Sq', d = 4),
+round(aov$'Mean Sq', d = 4), format(round(c(aov$'F value',a)[1:6],d = 4)),
+format(round(c(aov$'Pr(>F)',a)[1:6], d = 4)))); 
+
+colnames(aov) = s; rownames(aov) = w;  
+levels(aov$'F value')[1] = '';
+levels(aov$'Pr(>F)')[1] = '';
+
+cat('',sep = '\n'); aov;
+
+###############################################################
+#                 variables in final model 
+#                 ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+# log(INCOME)
+# log_GASP.: 
+# -- part of log(GASP) uncorrelated with log(INCOME)  
+# log_PNC.: 
+# -- part of log(PNC) uncorrelated with (log(INCOME),log(GASP))
+############################################################### 
+
+x1 = scale(log(INCOME), scale = F); 
+x2 = scale(log(GASP), scale = F); 
+x3 = scale(log(PNC), scale = F); 
+x4 = scale(log(PUC), scale = F); 
+x5 = scale(log(PPT), scale = F);  
+
+log_GASP. = residuals(lm(x2 ~ 0 + x1));
+log_PNC.  = residuals(lm(x3 ~ 0 + x1 + x2));
+log_PUC.  = residuals(lm(x4 ~ 0 + x1 + x2 + x3));
+log_PPT.  = residuals(lm(x5 ~ 0 + x1 + x2 + x3 + x4));
+ 
+f = log(G.10) ~ log(INCOME) + log_GASP. + log_PNC. + log_PUC. + 
+log_PPT.; 
+
+model.final = lm(f,gas); 
+
+coef.final = round(with(summary(model.final), coefficients), d = 4); 
+
+cat('', sep = '\n'); (coef.final = format(coef.final));
+
+#########
+# compare
+#########
+
+cat('', sep = '\n'); aov;
+
+cat('', sep = '\n'); coef;
+
+################################################
+# collinearity after taking logs (flat function)
+################################################ 
+
+data.1 = log(data.frame(INCOME,GASP,PNC,PUC,PPT));
+
+colnames(data.1) = u; 
+
+cat('', sep = '\n'); (R = round(cor(data.1), d = 4)); 
+
+cat('', sep = '\n'); round(vif(model), d = 4);
+
+################################################
+#       residual plots in model with 
+#  (log(INCOME), log(GASP), log(PNC)) 
+################################################ 
+
+f = log(G.10) ~ log(INCOME) + log(GASP) + log(PNC);
+
+summary(lm(f,gas));
+
+windows(); 
+
+residualPlots(lm(f,gas), 
+type = 'rstudent', 
+tests = FALSE, 
+quadratic = FALSE, 
+ask = FALSE, 
+col = 'royalblue',
+main = 'log(G.10) ~ log(INCOME) + log(GASP) + log(PNC)',
+pch = 19,
+cex = 1.5); 
+
+f = log(G.10) ~ log(INCOME) + log_GASP. + log_PNC.;
+
+summary(lm(f,gas));
+
+windows(); 
+
+residualPlots(lm(f,gas), 
+type = 'rstudent', 
+tests = FALSE, 
+quadratic = FALSE, 
+ask = FALSE, 
+col = 'firebrick1',
+main = 'log(G.10) ~ log(INCOME)  + log_GASP. + log_PNC.',
+pch = 19,
+cex = 1.5); 
+
+detach(gas);

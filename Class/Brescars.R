@@ -1,0 +1,262 @@
+# Set working directory
+setwd("/Users/Emilie/Dropbox/Skole/UC3M/Predictive modeling")
+
+install.packages("PBSmodelling")
+library(PBSmodelling);
+
+clearRcon();
+
+######################################### 
+# [1] clear console and customize options
+#########################################
+
+rm(list = ls());
+
+graphics.off();
+
+loadRconsole(
+  'Software2/Rconsole5.txt'
+);
+
+#########################################
+# [2] data
+#########################################
+cars = read.table('Data2/cars.txt');
+colnames(cars) = c('speed','dist');
+class(cars);
+str(cars);
+n = dim(cars)[1];n
+View(cars);
+
+attach(cars);  
+
+#########################################
+# [3] linear fit
+#########################################
+
+f = dist ~ speed;
+
+model = lm(f);  
+
+#########################################
+# [4] model suitabiity
+#########################################
+
+fit = fitted(model);
+
+res = residuals(model); 
+
+rstand = rstandard(model);
+
+rstud = rstudent(model);
+
+hat = hatvalues(model);  
+
+dcook = cooks.distance(model); 
+
+diagn = round(cbind(fit, res,rstand,rstud, 
+                    hat,dcook), d = 4);
+
+colnames(diagn) = c('fit', 'res', 'rstand', 
+                    'rstud', 'hat', 'dcook'); 
+
+head(diagn, n = 10); 
+
+windows(); 
+
+par(bg = 'aliceblue', mfrow = c(2,2), 
+    oma = c(2,2,3,2),
+    mar = c(4.5, 4.5, 1.5, 1.5)); 
+
+plot(model, 1, sub.caption = '');
+
+mtext('diagnostic plots', outer = T, 
+      cex = 1.3, col = 'black', line = 0.75, 
+      font = 2);
+
+box('inner', col = 'black',
+    lty = '1373'); 
+
+plot(model, 2, sub.caption = '');
+
+plot(model, 3, sub.caption = '');
+
+plot(model, 4, sub.caption = ''); 
+
+Sys.sleep(15);
+
+#########################################
+# [5] residual plots
+#########################################
+
+windows(); 
+
+par(bg = 'white', mfrow = c(2,2), lwd = 2., 
+    font.lab = 2, cex.lab = 1.2,
+    col.lab = 'navy', oma = c(2,2,3,2),
+    mar = c(4.5, 4.5, 1.5, 1.5));
+
+plot(fit, res, col = 'darkcyan', 
+     pch = 15, cex = 1.5); 
+
+abline(h = 0, lwd = 4, col = 'grey');
+
+mtext('linear', outer = T, cex = 1.3, 
+      col = 'black', line = 0.75, font = 2);
+
+box('inner', col = 'royalblue', 
+    adj = 0, lwd = 2., lty = '1373');  
+
+Sys.sleep(5);  
+
+plot(fit, rstand, col = 'violetred', 
+     pch = 16, cex = 1.5); 
+
+abline(h = 0, lwd = 4, col = 'grey');
+
+Sys.sleep(5);  
+
+plot(fit, rstud, col = 'orange', 
+     pch = 17, cex = 1.5); 
+
+abline(h = 0, lwd = 4, col = 'grey'); 
+
+Sys.sleep(10);
+
+#########################################
+# [6] quadratic fit
+#########################################
+
+f = dist ~ speed + I(speed^2);
+
+model = lm(f);
+
+fit = fitted(model);
+
+res = residuals(model); 
+
+rstand = rstandard(model);
+
+rstud = rstudent(model);
+
+windows(); 
+
+plot(model, 1, sub.caption = '', 
+     caption = 'dist ~ speed + I(speed^2)');
+
+Sys.sleep(10);
+
+windows();
+
+par(lwd = 2.);
+
+plot(fit, rstud, main = 'quadratic fit', 
+     col = 'navy', pch = 15, cex = 1.5); 
+
+abline(h = 0, lwd = 4, col = 'grey');
+
+Sys.sleep(10);
+
+#########################################
+# [5] linear in semi-logs
+#########################################
+
+f = log(dist) ~ speed;
+
+model = lm(f);
+
+a = coef(model)[1]; b = coef(model)[2];
+
+res = residuals(model); 
+
+rstand = rstandard(model);
+
+rstud = rstudent(model);
+
+windows(); 
+
+plot(model, 1, sub.caption = '',
+     caption = 'log(dist) ~ speed');
+
+Sys.sleep(10);
+
+windows();
+
+par(lwd = 2.);
+
+plot(fit, rstud, main = 'log(dist) ~ speed', 
+     col = 'maroon4', pch = 17, cex = 1.5); 
+
+abline(h = 0, lwd = 4, col = 'grey');
+
+#########################################
+# [6] explanation of linear residual 
+#     plots
+#########################################
+
+coef = round(cbind(exp(a),b), d = 4); 
+
+colnames(coef) = c('cons','power');
+
+rownames(coef) = c('coef');
+
+coef;
+
+f = dist ~ speed;
+
+model = lm(f);  
+
+fitL = fitted(model);
+
+resL = residuals(model); 
+
+rstandL = rstandard(model);
+
+rstudL = rstudent(model);
+
+hatL = hatvalues(model);  
+
+dev.set(3); 
+
+diagL = round(cbind(dist, exp(a + b*speed), 
+                    fitL, resL, rstandL,rstudL,hatL), d = 4); 
+
+colnames(diagL) = c('dist', 'truesignal', 
+                    'fitL', 'resL', 'rstandL','rstudL', 'hatL');
+
+head(diagL,n = 15);
+
+#########################################
+# [7] explanation of quadratic residual 
+#     plots
+#########################################
+
+f = dist ~ speed + I(speed^2);
+
+model = lm(f);  
+
+fitQ = fitted(model);
+
+resQ = residuals(model); 
+
+rstandQ = rstandard(model);
+
+rstudQ = rstudent(model);
+
+hatQ = hatvalues(model);  
+
+dev.set(5); 
+
+diagQ = round(cbind(dist, exp(a + b*speed), 
+                    fitQ, resQ,rstandQ,rstudQ,hatQ), d = 4); 
+
+colnames(diagQ) = c('dist', 'truesignal', 
+                    'fitQ', 'resQ', 'rstandQ', 'rstudQ', 'hatQ');
+
+head(diagQ,n = 15); 
+
+detach(cars);
+
+search(); 
+
+ls(); 

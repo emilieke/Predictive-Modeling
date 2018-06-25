@@ -1,0 +1,129 @@
+########################################
+# [1] data 
+########################################
+
+library(openxlsx);
+
+cexp = read.xlsx(
+'C:\\adiscos\\discoc\\docencia\\regdoc\\Cdata\\Dgls\\consumexp.xlsx'
+);  
+
+class(cexp); 
+
+str(cexp); 
+
+attributes(cexp);  
+
+n = nrow(cexp);
+
+head(cexp,10);  
+
+########################################
+# [2] simple linear regression 
+########################################
+
+options(show.signif.stars = F); 
+
+f = Expenditure ~ Stock; 
+
+model.1 = lm(f,cexp); 
+
+summary(model.1);
+
+#######################################
+# [3] standard analysis of variance
+########################################
+
+f = Expenditure ~ 1;
+
+model.0 = lm(f,cexp);  
+
+anova(model.0, model.1);
+
+library(car);
+ 
+durbinWatsonTest(model.1)
+
+########################################
+# [4] residual plots
+########################################
+
+res = residuals(model.1); 
+
+studres = rstudent(model.1); 
+
+windows();
+
+par(bg = 'ivory2',lwd = 2., 
+col = 'black'); 
+
+plot(res, type = 'n'); 
+
+lines(res, 
+type = 'b', 
+col = 'royalblue', 
+lwd = 2.5, 
+cex = 1.5,
+pch = 19);  
+
+abline(h = 0, col = 'black', lty = 1373); 
+
+windows();
+
+par(bg = 'beige',lwd = 2., 
+col = 'black'); 
+
+plot(studres, type = 'n'); 
+
+lines(studres, 
+type = 'b', 
+col = 'purple', 
+lwd = 2.5, 
+cex = 1.5,
+pch = 19);  
+
+abline(h = 0, col = 'black', lty = 1373); 
+
+########################################
+# [5] Cochrane - Orcutt iteration
+########################################
+
+library(orcutt); 
+
+model.2 = cochrane.orcutt(model.1);   
+
+with(model.2,rho);  
+
+output = with(model.2,Cochrane.Orcutt);  
+
+with(output, coefficients);
+
+res.co = with(output, residuals); 
+
+res.co; 
+
+windows(); 
+
+par(bg = 'azure1',lwd = 2., 
+col = 'black'); 
+
+plot(res.co, type = 'n'); 
+
+lines(res.co, 
+type = 'b', 
+col = 'seagreen', 
+lwd = 2.5, 
+cex = 1.5,
+pch = 19);  
+
+abline(h = 0, col = 'black', lty = 1373); 
+
+detach('package:openxlsx');
+
+detach('package:orcutt');
+
+detach('package:car');
+
+search();
+
+ls();

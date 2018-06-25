@@ -1,0 +1,135 @@
+######################################### 
+# [1] clear console and customize options
+#########################################
+
+rm(list = ls());
+
+graphics.off();
+
+loadRconsole('F:/Rconsole8.txt');
+
+########################################
+# [2] data 
+########################################
+
+toy.ota = 
+read.table(
+'C:/adiscos/discoc/docencia/bigdata/Cdata/toyota.txt',
+h = T);
+
+rows. = c(1:1436);
+
+toy.ota = toy.ota[rows.,];
+
+str(toy.ota);  
+
+head(toy.ota, n = 5);
+
+with(toy.ota, hist(Price, 
+col = 'deepskyblue'));  
+
+########################################
+# [3] First predictive model 
+######################################## 
+
+options(show.signif.stars = F);
+
+f = Price ~ .;
+
+model.1 = lm(f, toy.ota); 
+
+summary(model.1);
+
+########################################
+# [4] Transform variables
+######################################## 
+
+with(toy.ota, summary(FuelType));
+
+toy.ota = within(toy.ota, {FuelType1 = as.numeric(FuelType == 'CNG')});
+
+toy.ota = within(toy.ota, {FuelType2 = as.numeric(FuelType == 'Diesel')});
+
+toy.ota = subset(toy.ota, select = - FuelType);
+
+head(toy.ota, n = 5);
+
+model.2 = lm(f, toy.ota); summary(model.2);
+
+########################################
+# [5] Cross validation
+######################################## 
+
+train = sample(nrow(toy.ota), size = 1000);
+
+model.3 = lm(f, data = toy.ota[train, ]); summary(model.3);
+
+Sys.sleep(10);
+
+########################################
+# [6] Prediction errors
+######################################## 
+
+pred.test = predict(model.3, toy.ota[-train,], 
+se.fit = T, 
+interval = 'none'); 
+
+av.var.fit = with(pred.test, mean(se.fit^2));
+
+head(with(pred.test, cbind(fit,se.fit)), n = 10); 
+
+error = with(toy.ota[-train,], Price) - with(pred.test, fit); 
+
+P = round(
+cbind(with(toy.ota[-train,], Price), 
+with(pred.test,fit), error), 
+    d = 4);
+
+colnames(P)[1:2] = c('Price',
+'Prediction');
+
+dim(P);
+
+head(P, n = 20);
+
+me = mean(error); round(me, d = 4); 
+
+rmse = sqrt(mean(error^2)); round(rmse, d = 4);
+
+mape = mean(abs(error))/100; round(mape, d = 4);
+
+with(summary(model.3), sigma); 
+
+av.var.fit;
+
+sqrt(with(summary(model.3), sigma^2) + av.var.fit);   
+
+########################################
+# [7] With user defined functions
+######################################## 
+
+me. = function(error)
+{
+  round(mean(error), d = 4);
+}; me.(error);
+
+rmse. <- function(error)
+{
+  round(sqrt(mean(error^2)), d = 4);
+}; rmse.(error);
+ 
+# Function that returns Mean Absolute Error
+mape. <- function(error)
+{
+  round(mean(abs(error))/100., d = 4);
+}; mape.(error);
+
+with(summary(model.3), sigma); 
+
+av.var.fit;
+
+sqrt(with(summary(model.3), sigma^2) + av.var.fit); 
+  
+ls();
+
+search();

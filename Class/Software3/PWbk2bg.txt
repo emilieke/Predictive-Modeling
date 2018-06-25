@@ -1,0 +1,118 @@
+====================================================================
+[1]
+====================================================================
+
+windows(); 
+
+plot(cst, col = 'brown2', pch = 16, 
+cex = 1.1, cex.labels = 1.3, 
+font.labels = 2, gap = 0.15,
+main = 'cost (before transforming)'); 
+
+f = cost ~ .;
+
+model.1 = lm(f, data = cst); 
+
+options(show.signif.stars = F); 
+
+summary(model.1); 
+
+cat('',sep = '\n'); round(coef(summary(model.1)), d = 4);
+
+library(car);
+
+windows();
+
+residualPlots(model.1, 
+type = 'rstudent',
+tests = FALSE, 
+quadratic = FALSE,
+ask = FALSE, 
+col = 'darkcyan',
+pch = 19,
+cex = 1.5, 
+main = 'Residual plots cost (before transforming)'); 
+
+windows(); 
+
+plot(log(cst), col = 'green4', pch = 16, 
+cex = 1.1, cex.labels = 1.3, 
+font.labels = 2, gap = 0.15,
+labels = paste0('log(',colnames(cst),')'),
+main = 'cost (after taking logs)'); 
+
+f = log(cost) ~ log(machinery) + log(raw) + 
+log(energy) + log(salary);
+
+model.2 = lm(f, data = cst); 
+
+summary(model.2);
+
+cat('',sep = '\n'); format(round(coef(summary(model.2)), d = 4));
+
+cat('',sep = '\n'); round(confint(model.2, level = .95), d = 4);
+
+newdata = data.frame(80,2000,1000,25); 
+
+colnames(newdata) = colnames(cst)[1:4]; 
+
+cat('',sep = '\n'); (pred = exp(predict(model.2, newdata)));
+
+newdata; cat('',sep = '\n');  tail(cst); 
+
+##############################
+# residual plots + complements
+##############################
+
+windows();
+
+residualPlots(model.2, 
+type = 'rstudent',
+tests = FALSE, 
+quadratic = FALSE,
+ask = FALSE, 
+col = 'maroon4',
+pch = 19,
+cex = 1.5, 
+main = 'Residual plots cost (after taking logs)');
+
+windows(); 
+
+avPlots(model.2, pch = 16, col = 'royalblue2', grid = F, 
+main = 'Added-Variable Plots (after transforming)');   
+
+windows(); 
+
+crPlots(model.2, pch = 16, col = 'mediumseagreen', grid = F, 
+main = 'Component + Residual Plots (after transforming)',
+col.lines = c('firebrick1','transparent'));      
+
+====================================================================
+[2]
+====================================================================
+
+rhs = paste(colnames(data.1)[2:7],collapse = ' + ');
+
+(f = as.formula(paste('Sales',rhs, sep = ' ~ '))); 
+
+model.1 = lm(f,data.1); 
+
+lht(model.1, 'Female = 0');
+
+round(coef(summary(model.1)), d = 4);
+
+lht(model.1, c('Female = 0','HS = 0'));
+
+round(confint(model.1,'Income'), d = 4);
+
+summary(update(model.1, ~ . -Income));
+
+summary(update(model.1, ~ . - HS - Black - Female));
+
+summary(lm(Sales ~ Income, data.1)); 
+
+====================================================================
+[3]
+====================================================================
+
+# In softwareR2bg.txt 

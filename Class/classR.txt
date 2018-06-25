@@ -1,0 +1,123 @@
+#######################
+# read data 
+#######################
+
+# (used.car = read.table('C:\\ ... \\usedcar.txt'));
+
+colnames(used.car) = c('price','years');
+
+class(used.car);
+
+str(used.car);
+
+n = dim(used.car)[1];
+
+##################################
+# plot data 
+################################## 
+
+windows(); # take the plot outside RStudio 
+
+with(used.car,plot(years,price, pch = 16,   
+main = 'Used car data',
+col = 'royalblue', lwd = 1.5));  
+
+####################################
+# interpolate several lines visually 
+#################################### 
+
+intercept = 12;
+
+slope = -1.;
+
+abline(a = intercept, b = slope, lty = '1373', 
+col = 'mediumseagreen',
+lwd = 1.5);
+
+############################
+# Remove significance stars;
+############################
+
+options(show.signif.stars = F); 
+
+#############################################################
+# Fit of simple linear regression model  
+# For writing '~', do 'AltGr + 4 + Space'; 
+#############################################################
+
+f = price ~ years; # f: formula
+
+# or simply f = price ~. ;
+
+model = lm(f, data = used.car);  
+
+summary(model); 
+
+str(model); 
+
+str(summary(model));  
+
+#######################
+# Standard ANOVA table;
+#######################
+
+f = price ~ 1.;
+
+one.sample = lm(f,used.car); 
+
+anova(one.sample,model);
+
+###############
+# Model matrix;
+###############
+
+model.matrix(model)[,]; # [,] for extraction;
+
+############################################
+# Coefficients, fitted values and residuals;
+############################################
+
+(betas = coef(model));
+
+fit = fitted(model); 
+
+res = residuals(model); 
+
+stres = rstandard(model); 
+
+studres = rstudent(model); 
+
+windows(); 
+
+par(mfrow = c(2,2));
+
+plot(model,which = c(1:2),
+add.smooth = FALSE, 
+label.id = NULL,
+sub.caption = '', 
+caption = 'residual plots');
+
+library(car);
+
+windows(); 
+
+residualPlots(model, 
+type = 'rstudent',
+tests = F, 
+quadratic = NULL,
+fitted = F); 
+ 
+#################################################
+# Confidence intervals for individual parameters;
+#################################################
+
+confint(model, 'years', level = 0.90);
+
+#####################################################################
+# Confidence and prediction intervals for specified regressor values;
+#####################################################################
+
+predict(model, data.frame(years = 5), 
+se.fit = TRUE, interval = 'confidence', 
+level = 0.95);
+ 

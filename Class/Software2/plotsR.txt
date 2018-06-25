@@ -1,0 +1,376 @@
+library(PBSmodelling);
+
+graphics.off(); 
+
+clearRcon(os = 'windows');
+######################
+# [1] Change directory 
+######################
+
+rm(list = ls());
+
+loadRconsole('G:/Rconsole8.txt');
+
+setwd('G:/Amtda/CexamplesR'); 
+
+###############
+# [2] Read data
+############### 
+
+companies =  read.table('companies.txt');  
+
+names(companies) =  c('Size', 'Liq', 'Empl'); 
+
+str(companies); 
+
+methods(plot);
+
+Sys.sleep(15);
+ 
+####################
+# [3] Canonical plot
+#################### 
+
+windows();
+
+opar = par(no.readonly = T);
+ 
+plot(companies[,1], companies[,2]);  
+
+Sys.sleep(5);
+
+############################
+# [4] With proper axis names
+############################
+
+attach(companies);
+
+xrange = range(Size);
+
+yrange = range(Liq);
+  
+plot(xrange, yrange, type = 'n', 
+xlab = 'Size', ylab = 'Liq'); 
+
+points(Size, Liq);
+
+Sys.sleep(5); 
+
+#####################
+# [5] Marker in color
+##################### 
+
+points(Size, Liq, 
+col = 'red'); 
+
+Sys.sleep(5); 
+
+######################
+# [6] Arbitrary marker
+###################### 
+
+points(Size, Liq, 
+pch = '@', 
+col = 'red'); 
+
+Sys.sleep(5);
+
+################################
+# [7] Different marker and color
+################################
+
+plot(xrange, yrange, 
+type = 'n', 
+xlab = 'Size', 
+ylab = 'Liq'); 
+
+points(Size, Liq, 
+pch = 16, 
+col = 'orangered'); 
+
+Sys.sleep(5);
+
+##################
+# [8] Darker color
+##################
+
+points(Size, Liq, 
+pch = 16, 
+col = 'orangered4'); 
+
+Sys.sleep(5);
+
+###################
+# [9] Larger marker
+###################
+
+points(Size, Liq, 
+cex = 1.5, 
+pch = 15, 
+col = 'cyan');
+
+Sys.sleep(5);
+
+###################
+# [10] Thicker axes
+###################
+
+par(opar);
+
+par(lwd = 2);
+
+plot(xrange, yrange,  
+type = 'n', 
+xlab = 'Size', 
+ylab = 'Liq'); 
+
+points(Size, Liq, 
+cex = 1.5, 
+pch = 15, 
+col = 'navy');
+
+Sys.sleep(5);
+
+###################
+# [11] With a title
+###################
+
+plot(xrange, yrange, 
+type = 'n', 
+xlab = 'Size', 
+ylab = 'Liq',
+main = 'Size vs Liquidity'); 
+
+points(Size, Liq,   
+cex = 1.5, 
+pch = 15, 
+col = 'brown');
+
+Sys.sleep(5);
+
+############################
+# [12] With a title in color
+############################ 
+
+plot(xrange, yrange,
+type = 'n', 
+xlab = 'Size', 
+ylab = 'Liq',
+main = 'Size vs Liquidity',
+col.main ='aquamarine4');
+
+points(Size, Liq, 
+cex = 1.5, 
+pch = 15, 
+col = 'brown'); 
+
+Sys.sleep(5);
+
+#######################
+# [13] With a sub-title
+####################### 
+
+plot(xrange, yrange,
+type = 'n', 
+xlab = 'Size', 
+ylab = 'Liq',
+main = 'Size vs Liquidity',
+col.main ='gray25',
+sub = 'Scatter plot example');
+
+points(Size, Liq,  
+cex = 1.5, 
+pch = 15, 
+col = 'purple'); 
+
+Sys.sleep(5);
+
+####################
+# [14] With a legend
+#################### 
+
+plot(xrange, yrange,
+type = 'n', 
+xlab = 'Size', 
+ylab = 'Liq',
+main = 'Size vs Liquidity',
+col.main ='gray25',
+sub = 'Scatter plot example');
+
+points(Size, Liq,  
+cex = 1.5, 
+pch = 15, 
+col = 'purple'); 
+
+legend('topleft', 
+xjust = 0.5, 
+text.width = strwidth('                   ') , legend = 
+'Example 1'); 
+
+Sys.sleep(5); 
+
+plot(xrange, yrange,
+type = 'n', 
+xlab = 'Size', 
+ylab = 'Liq',
+main = 'Size vs Liquidity',
+col.main ='gray25',
+sub = 'Scatter plot example');
+
+points(Size, Liq,  
+cex = 1.5, 
+pch = 15, 
+col = 'purple');  
+
+par(lwd = 1.);
+
+legend(xrange[1],yrange[2],
+legend = 'Example 1 ',
+pch = 15, 
+col = 'purple'); 
+
+Sys.sleep(5);
+
+#######################
+# [15] background color
+####################### 
+
+par(opar);
+
+par(lwd = 2, bg = 'azure2');
+
+plot(xrange, yrange,
+type = 'n', 
+xlab = 'Size', 
+ylab = 'Liq',
+main = 'Size vs Liquidity',
+col.main ='gray50',
+sub = 'Scatter plot example');
+
+points(Size, Liq,  
+cex = 1.5, 
+pch = 15, 
+col = 'purple');  
+
+par(lwd = 1., bg = 'wheat');
+
+legend(xrange[1],yrange[2],
+legend = 'Example 1 ',
+pch = 15, 
+col = 'purple');  
+
+Sys.sleep(5);
+
+################################
+# [16] With superimposed ls line
+################################ 
+
+f = Liq ~ Size;
+
+abline(lm(f), lty = 1, 
+lwd = 5, col = 'grey'); 
+
+detach(companies);
+
+##############################
+# [17] Avoid attach using with 
+##############################
+
+par(opar);
+
+par(lwd = 2, bg = 'snow2');
+
+plot(xrange, yrange,
+type = 'n', 
+xlab = 'Size', 
+ylab = 'Liq',
+main = 'Size vs Liquidity',
+col.main ='gray50',
+sub = 'Scatter plot example');
+
+with(companies, 
+points(Size, Liq,  
+cex = 1.5, 
+pch = 15, 
+col = 'orangered2')); 
+
+f = Liq ~ Size;
+
+abline(lm(f,data = companies), 
+lty = '1234', 
+lwd = 5, 
+col = 'grey');   
+
+par(lwd = 1., bg = 'palegreen');
+
+legend(xrange[1],yrange[2],
+legend = 'Example 1 ',
+pch = 15, 
+col = 'orangered2',
+text.font = 2);  
+
+Sys.sleep(5);
+
+##########################
+# [18] Scatter plot matrix
+##########################
+
+windows();
+
+par(opar);
+
+par(bg = 'grey85', lwd = 1.5);
+
+plot(companies, pch = 16,
+main = 'Scatter plot matrix', 
+cex = 2., 
+gap = .25, 
+col = 'purple4',
+font.labels = 2); 
+
+Sys.sleep(5);
+
+##############
+# [19] Subplot
+##############
+
+attach(companies); 
+
+windows();
+
+par(opar);
+
+par(mfcol = c(2,2), lwd = 2., 
+bg = 'papayawhip');
+
+plot(Size, Liq, 
+main = 'Size vs Liquidity', 
+xlim = xrange,
+ylim = yrange,
+cex = 1.5, 
+pch = 16, 
+col = 'brown');
+
+hist(Size, 
+main = 'Histogram of Size', 
+col = 'orangered');
+
+hist(Liq, 
+main = 'Histogram of Liquidity', 
+col = 'violetred');
+
+plot(Liq, Size, 
+main = 'Liquidity vs Size',  
+xlim = xrange,
+ylim = yrange,
+cex = 1.5, 
+pch = 16, 
+col = 'brown'); 
+
+detach(companies);
+
+par(opar);
+
+search();
+
+ls(); 

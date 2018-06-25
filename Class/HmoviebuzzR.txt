@@ -1,0 +1,109 @@
+library(PBSmodelling);
+
+clearRcon(os = 'windows');
+######################################### 
+# [1] clear console and customize options
+#########################################
+
+rm(list = ls());
+
+graphics.off();
+
+loadRconsole(
+'C:/Users/santiago/Documents/Rconsole6.txt'
+);
+
+########################################
+# [2] data 
+########################################
+
+library(openxlsx);
+
+movie.box =  read.xlsx(
+'G:/Bregdoc/Adata/moviebuzz.xlsx', 
+sheet = 1, 
+rows = c(1:63), 
+cols = c(1:6)); 
+
+class(movie.box); 
+
+str(movie.box); 
+
+attributes(movie.box);  
+
+attach(movie.box);
+
+head(movie.box, n = 110);  
+
+Sys.sleep(10); 
+
+########################################
+# [3] plot of movie.box
+########################################
+
+windows();
+
+par(lwd = 2, font.lab = 2);
+
+plot(Fandango, Box/1E6, col = 'orangered', 
+pch = 16, cex = 1.75, xlab = 'Fandango',
+ylab = 'Box/1E6'); 
+
+Sys.sleep(10); 
+
+windows();
+
+par(lwd = 2, font.lab = 2);
+
+plot(Fandango, log(Box/1E6), 
+col = 'navyblue', pch = 18, cex = 2.,
+xlab = 'Fandango', ylab = 'log(Box/1E6)'); 
+
+f = log(Box/1E6) ~ Fandango;
+
+abline(lm(f), col = 'grey', lwd = 4, lty = 1); 
+
+Sys.sleep(10); 
+
+########################################
+# [4] ls line in logs
+########################################
+
+options(show.signif.stars = F);
+
+f = log(Box/1E6) ~ Fandango; 
+
+model.log = lm(f);
+
+summary(model.log);
+
+Sys.sleep(10); 
+
+windows();
+
+par(lwd = 1);
+
+plot(model.log, 1, label.id = NULL,
+sub.caption = '', 
+caption = 'residual plot log(Box/1E6) ~ Fandango');
+
+c.log = coef(model.log); c.log;
+
+########################################
+# [5] ls line in logs
+########################################
+
+dev.set(2);
+
+lines(sort(Fandango),
+sort(exp(c.log[1] + c.log[2]*Fandango)),
+lwd = 4.5,
+lty = '1111', col = 'navy');
+
+detach(movie.box);
+
+detach('package:openxlsx');
+
+search();
+
+ls();

@@ -1,0 +1,202 @@
+############
+# data.frame
+############
+
+st = data.frame(state.x77); 
+
+###################
+# response variable
+###################
+
+cat('', sep = '\n'); (y = colnames(st)[4]); cat('', sep = '\n');
+
+############
+# regressors
+############
+
+cat('', sep = '\n'); (x = colnames(st)[-4]); cat('', sep = '\n'); 
+
+################
+# create formula
+################
+
+cat('', sep = '\n'); (lhs = y); cat('', sep = '\n');
+
+cat('', sep = '\n'); (rhs = paste(x, collapse = ' + ')); cat('', sep = '\n');
+
+cat('', sep = '\n'); (f = as.formula(paste(lhs, rhs, sep = ' ~ '))); cat('', sep = '\n');
+
+####
+# or
+####
+
+cat('', sep = '\n'); (f.1 = as.formula(paste(y,paste(x, collapse = ' + '),sep = ' ~ '))); cat('', sep = '\n'); 
+
+######################
+# with logs everywhere
+######################
+
+cat('', sep = '\n'); (lhs = paste('log(',y,')',sep = '')); cat('', sep = '\n');
+
+cat('', sep = '\n'); (z = paste('log(',x,')',sep = '')); cat('', sep = '\n');
+
+cat('', sep = '\n'); (rhs = paste(z, collapse = ' + ')); cat('', sep = '\n');
+
+cat('', sep = '\n'); (f.log = as.formula(paste(lhs,rhs, sep = ' ~ '))); cat('', sep = '\n');
+
+###########
+# lm object
+###########
+
+model.full = lm(f,st); 
+
+######################
+# extract coefficients
+######################
+
+coef.full = with(summary(model.full), coefficients); 
+
+##############
+# presentation
+##############
+
+coef.full = format(round(coef.full, d = 4)); 
+
+cat('', sep = '\n'); coef.full ; cat('', sep = '\n'); 
+
+########################################
+# as an alternative for fast computation
+########################################
+
+library(biglm); 
+
+model.full2 = biglm(f,st); # biglm object 
+
+cat('', sep = '\n'); summary(model.full2); cat('', sep = '\n');
+
+#####################################
+# constant used for rounding purposes
+#####################################
+
+a = .123456789;  
+
+#####################
+# 95% CI (Population)
+#####################
+
+int = confint(model.full, 'Population', level = .95); 
+
+cat('', sep = '\n'); format(round(c(int,a), d = 4))[1:2]; cat('', sep = '\n');
+
+#################
+# 95% CI (Income)
+#################
+
+int = confint(model.full, 'Income', level = .95);  # 95% CI (Income)
+
+cat('', sep = '\n'); format(round(c(int,a), d = 4))[1:2]; cat('', sep = '\n');
+
+#################
+# remove warnings
+#################
+
+options(warn = -1); # options(warn = 0) to restore warnings; 
+
+################################################
+# in-sample predictions and confidence intervals
+################################################
+
+pred = predict(model.full, se.fit = TRUE, interval = 'prediction', level = .95);  
+
+pred.1 = with(pred, data.frame(fit = fit[,1],se.fit, fit[,2:3]));
+
+conf = predict(model.full, se.fit = TRUE, interval = 'confidence', level = .95);  
+
+conf.1 = with(conf, data.frame(fit[,2:3]));
+
+cat('', sep = '\n'); format(round(cbind(pred.1,conf.1), d = 4)); cat('', sep = '\n');
+
+########################
+# for reducing the model
+########################
+
+model.red = update(model.full, ~ . - Income - Illiteracy - Area);
+
+coef.red = with(summary(model.red), coefficients); 
+
+coef.red = format(round(coef.red, d = 4)); 
+
+cat('', sep = '\n'); coef.red ; cat('', sep = '\n'); 
+
+#################################################
+# if Population (size type variable) were in logs
+#################################################
+
+model.final = update(model.full, ~ . - Income - Illiteracy - Area - Population + log(Population));
+
+coef.final = with(summary(model.final), coefficients); 
+
+coef.final = format(round(coef.final, d = 4)); 
+
+cat('', sep = '\n'); coef.final ; cat('', sep = '\n'); 
+
+################
+# formal aspects
+################
+
+model.full2 = update(model.full, ~ . - Population + log(Population)- Area + log(Area));
+
+coef.full2 = with(summary(model.full2), coefficients); 
+
+coef.full2 = format(round(coef.full2, d = 4)); 
+
+cat('', sep = '\n'); coef.full2 ; cat('', sep = '\n'); 
+
+##########################
+# anova(reduced (<), full)
+##########################
+
+cat('', sep = '\n'); anova(model.final,model.full2); cat('', sep = '\n');
+
+########################################
+# for explicitly constructing the F-test
+########################################
+
+library(car);  
+
+LHT = lht(model.full2, c('Income = 0', 'Illiteracy = 0', 'log(Area) = 0'));
+
+cat('', sep = '\n'); LHT ; cat('', sep = '\n'); 
+
+####################
+# graphics and plots
+####################
+
+##############################################
+# fanning shape of data in Population and Area
+# (both are size type variables)
+##############################################
+
+windows(); plot(st, pch = 19, col = 'royalblue2', cex = 1.2, main = 'st = data.frame(state.x77)', font.labels = 2); 
+
+############################################# 
+# take logs in Population and Area to correct
+#############################################
+
+st.M = transform(st, Population = log(Population), Area = log(Area));
+
+colnames(st.M)[1] = 'log.Pop'; colnames(st.M)[8] = 'log.Area'; 
+
+windows(); plot(st.M, pch = 19, col = 'salmon3', cex = 1.2, main = 'st.M = transform(st)', font.labels = 2); 
+
+###############################
+# residual plots of final model
+###############################
+
+windows(); plot(model.final, 1, pch = 19, col = 'purple', cex = 1.2, add.smooth = FALSE, 
+sub.caption = '', cex.caption = 1.4, labels.id = rep('',nrow(st))); 
+
+windows(); residualPlots(model.final, pch = 19, cex = 1.2, 
+type = 'rstudent', tests = FALSE, grid = FALSE, 
+col = 'mediumseagreen', main = 'Residual plots of model.final',
+smoother = NULL, quadratic = FALSE);
